@@ -6,19 +6,29 @@ package com.salmakhd.android.forpractice
 import androidx.compose.animation.*
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.TweenSpec
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.DraggableState
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalAnimationApi::class)
 @Preview
@@ -42,10 +52,10 @@ fun AnimationDemo() {
             enter = slideInVertically(
                 animationSpec = TweenSpec(durationMillis = 2000)
             ) {
-                with(density) {+40.dp.roundToPx() }
+                with(density) { +40.dp.roundToPx() }
             }
                     +
-                    expandVertically (
+                    expandVertically(
                         expandFrom = Alignment.Bottom,
                         animationSpec = TweenSpec(durationMillis = 2000)
                     ) +
@@ -63,7 +73,7 @@ fun AnimationDemo() {
             if (!state.currentState) {
                 Text(text = "Philippe")
             } else {
-                Text(text="Salma")
+                Text(text = "Salma")
             }
         }
 
@@ -92,41 +102,69 @@ fun AnimationDemo() {
                 Text("Phillipe") // not specifying any animations
             }
         }
-    }
 
-    var minutes by remember { mutableStateOf(0) }
-    AnimatedContent(
-        modifier = Modifier.draggable(
-            orientation = Orientation.Vertical,
-            state = DraggableState {
-                minutes++
-            }
-        ),
-        targetState = minutes) { targetState ->
-        Text(text = targetState.toString())
-    }
-
-    AnimatedContent(
-        targetState = minutes,
-        transitionSpec = {
-            // Compare the incoming number with the previous number.
-            if (targetState > initialState) {
-                // If the target number is larger, it slides up and fades in
-                // while the initial (smaller) number slides up and fades out.
-                slideInVertically { height -> height } + fadeIn() with
-                        slideOutVertically { height -> -height } + fadeOut()
-            } else {
-                // If the target number is smaller, it slides down and fades in
-                // while the initial number slides down and fades out.
-                slideInVertically { height -> -height } + fadeIn() with
-                        slideOutVertically { height -> height } + fadeOut()
-            }.using(
-                // Disable clipping since the faded slide-in/out should
-                // be displayed out of bounds.
-                SizeTransform(clip = false)
-            )
+        var minutes by remember { mutableStateOf(0) }
+        AnimatedContent(
+            modifier = Modifier.draggable(
+                orientation = Orientation.Vertical,
+                state = rememberDraggableState {
+                    if (it > 0)
+                        minutes++
+                    else minutes--
+                }
+            ),
+            targetState = minutes) { targetState ->
+            Text(text = targetState.toString())
         }
-    ) { targetCount ->
-        Text(text = "$targetCount")
+
+        AnimatedContent(
+            targetState = minutes,
+            transitionSpec = {
+                // Compare the incoming number with the previous number.
+                if (targetState > initialState) {
+                    // If the target number is larger, it slides up and fades in
+                    // while the initial (smaller) number slides up and fades out.
+                    slideInVertically { height -> height } + fadeIn() with
+                            slideOutVertically { height -> -height } + fadeOut()
+                } else {
+                    // If the target number is smaller, it slides down and fades in
+                    // while the initial number slides down and fades out.
+                    slideInVertically { height -> -height } + fadeIn() with
+                            slideOutVertically { height -> height } + fadeOut()
+                }.using(
+                    // Disable clipping since the faded slide-in/out should
+                    // be displayed out of bounds.
+                    SizeTransform(clip = false)
+                )
+            }
+        ) { targetCount ->
+            Text(text = "$targetCount", fontSize = 40.sp)
+        }
+
+        // rotation animation in compose
+        var shouldRotate by remember {
+            mutableStateOf(false)
+        }
+
+        val rotation by animateFloatAsState(
+            targetValue =
+            if (shouldRotate) 360f else 0f,
+            label = "rotation"
+        )
+
+        Spacer(modifier = Modifier.height(100.dp))
+
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .rotate(rotation)
+                .background(Color.Red)
+        ) {
+            Text("This should rotate")
+        }
+
+        LaunchedEffect(key1 = Unit) {
+            shouldRotate = true
+        }
     }
 }
